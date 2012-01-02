@@ -12,6 +12,7 @@ api_secret: _YOUR_FLICKR_APP_SECRET_
 email_from: _your_email_
 email_to: _your_moms_email_
 last_sent: 0
+# Use http://idgettr.com/ to get IDs for users
 people:
   - id: _id_of_user1_
     username: _username_of_user1_
