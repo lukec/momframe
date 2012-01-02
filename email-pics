@@ -48,7 +48,7 @@ for my $person (@{ $momrc->{people} }) {
             ->subject("Photo from $username")
             ->text_body("Photo: " . $photo->title)
             ->attach($photo_content, filename => $filename)
-            ->send if 0;
+            ->send;
         print "Sent.\n";
     }
 }
