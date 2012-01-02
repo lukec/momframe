@@ -31,8 +31,8 @@ for my $person (@{ $momrc->{people} }) {
             print "Title is $title id is $id posted at $date\n";
         }
         else {
-            print '.';
-            next;
+            print  "  Found an old photo - skipping.\n";
+            last;
         }
         my $has_large = grep { $_->{label} =~ m/large/i } @{ $p->sizes->{size} };
         my $url = $has_large ? $p->url_l : $p->url_m;
