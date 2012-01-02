@@ -1,0 +1,59 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use Flickr::API2;
+use YAML qw/LoadFile DumpFile/;
+use FindBin;
+use Email::Stuff;
+use LWP::Simple qw/get/;
+use Fatal qw/rename/;
+
+$| = 1;
+
+my $momrc_file = "$FindBin::Bin/.momrc";
+my $momrc = LoadFile($momrc_file);
+
+my $api = new Flickr::API2(
+    { key => $momrc->{api_key}, secret => $momrc->{api_secret} });
+
+for my $person (@{ $momrc->{people} }) {
+    my ($id, $username) = ($person->{id}, $person->{username});
+    print "\nFetching photos for $username\n";
+    my @photos = $api->people->getPublicPhotos($id, per_page => 25);
+
+    for my $photo (@photos) {
+        my $title = $photo->title;
+        my $id = $photo->info->{photo}{id};
+        my $p = $api->photos->by_id($id);
+        my $date = $photo->info->{photo}{dates}{posted};
+
+        if ($date > $momrc->{last_sent}) {
+            print "Title is $title id is $id posted at $date\n";
+        }
+        else {
+            print '.';
+            next;
+        }
+        my $has_large = grep { $_->{label} =~ m/large/i } @{ $p->sizes->{size} };
+        my $url = $has_large ? $p->url_l : $p->url_m;
+
+        print "Fetching $url ... \n";
+        my $photo_content = get $url;
+        print "Fetched - size is " . length($photo_content) . "\n";
+
+        my $filename = join('.', $id, $photo->info->{photo}{originalformat}||'jpg');
+        print "Emailing as $filename\n";
+        Email::Stuff->to($momrc->{email_to})
+            ->from($momrc->{email_from})
+            ->subject("Photo from $username")
+            ->text_body("Photo: " . $photo->title)
+            ->attach($photo_content, filename => $filename)
+            ->send if 0;
+        print "Sent.\n";
+    }
+}
+
+$momrc->{last_sent} = time;
+my $momrc_temp = "$momrc_file.tmp.$$";
+DumpFile($momrc_temp, $momrc);
+rename $momrc_temp => $momrc_file;
