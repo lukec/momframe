@@ -1,0 +1,19 @@
+This is a tool to email recent pictures from flickr accounts to an email address, with the image as an attachment.
+
+This is specifically designed for my Mom, to use with her Kodak Pulse digital picture frame.
+
+http://www.amazon.com/gp/product/B0030MIU16/ref=oh_o00_s00_i00_details
+
+Use a .momrc in the same directory that looks like this:
+
+---
+api_key: _YOUR_FLICKR_API_KEY_
+api_secret: _YOUR_FLICKR_APP_SECRET_
+email_from: _your_email_
+email_to: _your_moms_email_
+last_sent: 0
+people:
+  - id: _id_of_user1_
+    username: _username_of_user1_
+  - id: _id_of_user2_
+    username: _username_of_user2_
