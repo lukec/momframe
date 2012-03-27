@@ -8,6 +8,8 @@ use Email::Stuff;
 use LWP::Simple qw/get/;
 use Fatal qw/rename/;
 use Getopt::Long;
+use XML::Atom::Client;
+use DateTime::Format::Atom;
 
 my $config_file = "$FindBin::Bin/.momrc";
 GetOptions(
@@ -21,6 +23,7 @@ my $momrc = LoadFile($config_file);
 my $api = new Flickr::API2(
     { key => $momrc->{api_key}, secret => $momrc->{api_secret} });
 
+my @to_send;
 for my $person (@{ $momrc->{people} }) {
     my ($id, $username) = ($person->{id}, $person->{username});
     print "\nFetching photos for $username\n";
@@ -46,21 +49,64 @@ for my $person (@{ $momrc->{people} }) {
         $p->populate_size_urls;
 
         my $url = $p->url_l || $p->url_m || return;
-        print "Fetching $url ... \n";
-        my $photo_content = get $url;
-        print "Fetched - size is " . length($photo_content) . "\n";
-
         my $filename = join('.', $id, $photo->info->{photo}{originalformat}||'jpg');
-        print "Emailing as $filename\n";
-        Email::Stuff->to($momrc->{email_to})
-            ->from($momrc->{email_from})
-            ->subject("Photo from $username")
-            ->text_body("Photo: " . $photo->title)
-            ->attach($photo_content, filename => $filename)
-            ->send;
-        print "Sent.\n";
+        push @to_send, {
+            subject => "Photo from $username",
+            url => $url,
+            filename => $filename,
+        };
     }
 }
+
+for my $feed_cfg (@{ $momrc->{feeds} }) {
+    my $api = XML::Atom::Client->new;
+    my $feed = $api->getFeed($feed_cfg->{url});
+
+    my $f = DateTime::Format::Atom->new();
+    my $dt = $f->parse_datetime( $feed->updated );
+    if ($dt->epoch > $momrc->{last_sent}) {
+        print "  Feed has been updated - fetching new photos.\n";
+    }
+    else {
+        print  "  Feed hasn't been updated - skipping.\n";
+        next;
+    }
+    my @entries = $feed->entries;
+    for my $entry (@entries) {
+        my $body = $entry->content->body;
+        while ($body =~ m/href="(http.+?\.(?:jpg|jpeg))"/ig) {
+            my $url = $1;
+            push @to_send, {
+                subject => "Photo from $feed_cfg->{name}",
+                url => $url,
+            };
+        }
+    }
+
+}
+
+for my $img (@to_send) {
+    unless ($img->{filename}) {
+        ($img->{filename} = $img->{url}) =~ s/.+\///;
+    }
+
+    my $photo_content = get $img->{url};
+    unless ($photo_content) {
+        print "Couldn't fetch $img->{url}\n";
+        next;
+    }
+    print "Fetched - size is " . length($photo_content) . "\n";
+
+    print "Emailing as $img->{filename}\n";
+    Email::Stuff->to($momrc->{email_to})
+        ->from($momrc->{email_from})
+        ->subject($img->{subject})
+        ->text_body("Photo: $img->{filename} attached")
+        ->attach($photo_content, filename => $img->{filename})
+        ->send;
+    print "Sent.\n";
+}
+
 
 $momrc->{last_sent} = time;
 my $momrc_temp = "$config_file.tmp.$$";
