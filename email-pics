@@ -7,6 +7,12 @@ use FindBin;
 use Email::Stuff;
 use LWP::Simple qw/get/;
 use Fatal qw/rename/;
+use Getopt::Long;
+
+my $config_file = "$FindBin::Bin/.momrc";
+GetOptions(
+    'config=s' => \$config_file,
+) or usage();
 
 $| = 1;
 
@@ -34,9 +40,13 @@ for my $person (@{ $momrc->{people} }) {
             print  "  Found an old photo - skipping.\n";
             last;
         }
-        my $has_large = grep { $_->{label} =~ m/large/i } @{ $p->sizes->{size} };
-        my $url = $has_large ? $p->url_l : $p->url_m;
+        # Work around a bug in Flickr::API2::Photo::populate_size_urls
+        %Flickr::API2::Photo::label_to_accessor = (Medium => 'url_m', Large => 'url_l');
+        $p->url_m('');
+        $p->url_l('');
+        $p->populate_size_urls;
 
+        my $url = $p->url_l || $p->url_m || return;
         print "Fetching $url ... \n";
         my $photo_content = get $url;
         print "Fetched - size is " . length($photo_content) . "\n";
@@ -57,3 +67,12 @@ $momrc->{last_sent} = time;
 my $momrc_temp = "$momrc_file.tmp.$$";
 DumpFile($momrc_temp, $momrc);
 rename $momrc_temp => $momrc_file;
+
+exit;
+
+
+sub usage {
+    die <<EOT
+USAGE: momframe [--config=file]
+EOT
+}
