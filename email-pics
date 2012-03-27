@@ -16,8 +16,7 @@ GetOptions(
 
 $| = 1;
 
-my $momrc_file = "$FindBin::Bin/.momrc";
-my $momrc = LoadFile($momrc_file);
+my $momrc = LoadFile($config_file);
 
 my $api = new Flickr::API2(
     { key => $momrc->{api_key}, secret => $momrc->{api_secret} });
