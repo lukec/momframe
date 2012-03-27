@@ -63,9 +63,9 @@ for my $person (@{ $momrc->{people} }) {
 }
 
 $momrc->{last_sent} = time;
-my $momrc_temp = "$momrc_file.tmp.$$";
+my $momrc_temp = "$config_file.tmp.$$";
 DumpFile($momrc_temp, $momrc);
-rename $momrc_temp => $momrc_file;
+rename $momrc_temp => $config_file;
 
 exit;
 
