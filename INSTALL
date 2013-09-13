@@ -3,9 +3,8 @@ This script requires the following ubuntu packages:
 * libxml2-dev
 * libexpat1-dev
 
-The following CPAN packages are required:
-* Flickr::API2
-* YAML
-* Email::Stuff
-* XML::Atom::Client
-* DateTime::Format::Atom
+Then you can install the dependencies listed in the cpanfile:
+
+* cpanm --installdeps .
+or
+* carton install --deployment
