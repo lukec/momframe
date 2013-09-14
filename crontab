@@ -1,3 +1,3 @@
 # Edit this to suit you then Put it in /etc/cron.d/momframe
 
-0 2 * * * lukec carton exec perl /home/lukec/src/momframe/email-pics > /home/lukec/src/momframe/momframe.log 2>&1
+0 2 * * * lukec carton exec perl /home/lukec/src/momframe/email-pics >> /home/lukec/src/momframe/momframe.log 2>&1
