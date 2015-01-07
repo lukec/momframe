@@ -11,12 +11,16 @@ use Getopt::Long;
 use XML::Atom::Client;
 use DateTime::Format::Atom;
 
-my $config_file = "$FindBin::Bin/.momrc";
+$ENV{PERL_LWP_SSL_VERIFY_HOSTNAME} = 0;
+
+my $config_file = "$FindBin::Bin/../.momrc";
 GetOptions(
     'config=s' => \$config_file,
 ) or usage();
 
 $| = 1;
+my $now = localtime;
+print "MOMFRAME: $now: $config_file\n";
 
 my $momrc = LoadFile($config_file);
 

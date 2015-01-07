@@ -1,0 +1,10 @@
+#!/bin/bash
+
+CONFIG=$1
+if [[ ! -e $CONFIG ]]; then
+    echo "Could not find $CONFIG!"
+    exit -1;
+fi
+
+LOG=/var/log/momframe.log
+docker run --rm -v $CONFIG:/app/.momrc momframe >> $LOG 2>&1

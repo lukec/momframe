@@ -4,7 +4,11 @@ This is specifically designed for my Mom, to use with her Kodak Pulse digital pi
 
 http://www.amazon.com/gp/product/B0030MIU16/ref=oh_o00_s00_i00_details
 
-Use a .momrc in the same directory that looks like this:
+
+
+STEP 1: Create a config file for your mom.
+
+Put something like this in your momrc file.
 
 ---
 api_key: _YOUR_FLICKR_API_KEY_
@@ -18,3 +22,38 @@ people:
     username: _username_of_user1_
   - id: _id_of_user2_
     username: _username_of_user2_
+
+
+
+(It should be valid YAML - Mom's love YAML)
+
+
+
+STEP 2: Build the docker container.
+
+Check out this repository, and then run `make docker`.  It should build you a docker image for your mom!
+
+
+
+STEP 3: Run the container by hand.
+
+
+Make sure it works.
+
+    sudo bin/momframe-docker path/to/your/momrc
+
+
+This command will run the script inside the docker container and show you the output.
+
+
+
+STEP 4: Put it on cron.
+
+Stick something like this in your /etc/cron.d/momframe file:
+
+
+MF="/home/offspring/src/momframe"
+MAILTO=awesome_son_or_daughter@example.com
+
+0 17 * * * $MF/bin/momframe-from-cron $MF/.momrc
+1 17 * * * $MF/bin/momframe-from-cron $MF/.granrc
